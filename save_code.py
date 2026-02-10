@@ -11,6 +11,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 
 try:
     from webdriver_manager.chrome import ChromeDriverManager
+    from webdriver_manager.core.utils import ChromeType
 except ImportError:
     print("Please install webdriver_manager: pip install webdriver-manager")
     exit(1)
@@ -77,15 +78,41 @@ def init_driver(headless=False):
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
     options.add_argument('--disable-software-rasterizer')
+    options.add_argument('--remote-debugging-port=9222')  # reduce DevToolsActivePort errors in containers
 
     # Support Streamlit Cloud/containers where Chrome is at a custom path
-    chrome_bin = os.getenv("CHROME_BIN") or "/usr/bin/chromium"  # default path on Streamlit Cloud with packages.txt
-    if os.path.exists(chrome_bin):
-        options.binary_location = chrome_bin
+    chrome_bin_candidates = [
+        os.getenv("CHROME_BIN"),
+        "/usr/bin/chromium",            # debian/ubuntu chromium package
+        "/usr/bin/chromium-browser",    # older ubuntu
+        "/usr/lib/chromium/chrome",     # some alpine builds
+        "/usr/bin/google-chrome",
+        "/usr/bin/google-chrome-stable",
+    ]
 
-    driver_path = os.getenv("CHROMEDRIVER_PATH") or "/usr/bin/chromedriver"
-    if not os.path.exists(driver_path):
-        driver_path = ChromeDriverManager().install()
+    chosen_bin = None
+    for candidate in chrome_bin_candidates:
+        if candidate and os.path.exists(candidate):
+            chosen_bin = candidate
+            break
+
+    if chosen_bin:
+        log(f"Using Chrome binary at {chosen_bin}")
+        options.binary_location = chosen_bin
+    else:
+        log("Chrome binary not found. Set CHROME_BIN to a valid path.")
+
+    driver_path = None
+    env_driver = os.getenv("CHROMEDRIVER_PATH")
+    if env_driver and os.path.exists(env_driver):
+        driver_path = env_driver
+    elif os.path.exists("/usr/bin/chromedriver"):
+        driver_path = "/usr/bin/chromedriver"
+    else:
+        # Download a Chromium-compatible driver to avoid version mismatch
+        driver_path = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+
+    log(f"Using ChromeDriver at {driver_path}")
     service = Service(driver_path)
 
     driver = webdriver.Chrome(service=service, options=options)
