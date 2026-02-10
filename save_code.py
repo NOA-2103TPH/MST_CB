@@ -75,17 +75,18 @@ def init_driver(headless=False):
         options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--disable-software-rasterizer')
 
     # Support Streamlit Cloud/containers where Chrome is at a custom path
-    chrome_bin = os.getenv("CHROME_BIN")
-    if chrome_bin and os.path.exists(chrome_bin):
+    chrome_bin = os.getenv("CHROME_BIN") or "/usr/bin/chromium"  # default path on Streamlit Cloud with packages.txt
+    if os.path.exists(chrome_bin):
         options.binary_location = chrome_bin
 
-    driver_path = os.getenv("CHROMEDRIVER_PATH")
-    if driver_path and os.path.exists(driver_path):
-        service = Service(driver_path)
-    else:
-        service = Service(ChromeDriverManager().install())
+    driver_path = os.getenv("CHROMEDRIVER_PATH") or "/usr/bin/chromedriver"
+    if not os.path.exists(driver_path):
+        driver_path = ChromeDriverManager().install()
+    service = Service(driver_path)
 
     driver = webdriver.Chrome(service=service, options=options)
     return driver
