@@ -20,15 +20,27 @@ import sys
 import io
 
 # Force UTF-8 encoding for stdout/stderr to handle Vietnamese characters
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+# Guard against environments where stdout/stderr don't expose .buffer (Streamlit Cloud wrappers)
+try:
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    if hasattr(sys.stderr, "buffer"):
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+except Exception:
+    pass  # Best effort; don't crash app on logging setup
 
-# Logging check
-log_file = open("lookup.log", "w", encoding="utf-8")
+# Logging check (fallback to console if file cannot be opened)
+log_file = None
+try:
+    log_file = open("lookup.log", "w", encoding="utf-8")
+except Exception:
+    log_file = None
+
 def log(msg):
     print(msg)
-    log_file.write(str(msg) + "\n")
-    log_file.flush()
+    if log_file:
+        log_file.write(str(msg) + "\n")
+        log_file.flush()
 
 # Configuration (allow override via env vars)
 INPUT_FILE = os.getenv("INPUT_FILE", "data/data.xlsx")
