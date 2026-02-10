@@ -8,7 +8,56 @@ from save_code import run_lookup
 
 st.set_page_config(page_title="Tra cứu MST theo CCCD", layout="wide")
 st.markdown(
-    "<h1 style='text-align:center;'>Tra cứu MST theo CCCD</h1>",
+    """
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+      .title-container {
+        text-align: center;
+        margin: 12px 0 24px 0;
+      }
+      .title-script {
+        font-family: 'Pacifico', cursive;
+        font-size: 38px;
+        color: #9b2c2c;
+        line-height: 1.1;
+        margin-bottom: 6px;
+      }
+      .title-blocks span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 18px;
+        color: #fff;
+        padding: 6px 11px;
+        margin: 1px;
+        border-radius: 6px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        letter-spacing: 0.5px;
+      }
+      .b1 { background: #c0392b; }
+      .b2 { background: #d35400; }
+      .b3 { background: #2980b9; }
+      .b4 { background: #16a085; }
+      .b5 { background: #8e44ad; }
+      .b6 { background: #2c3e50; }
+      .b7 { background: #f39c12; color: #2c3e50; }
+      .title-blocks .gap { width: 10px; background: transparent; box-shadow: none; }
+    </style>
+    <div class="title-container">
+      <div class="title-script">Tra cứu</div>
+      <div class="title-blocks">
+        <span class="b1">M</span>
+        <span class="b2">S</span>
+        <span class="b3">T</span>
+        <span class="gap"></span>
+        <span class="b4">C</span>
+        <span class="b5">C</span>
+        <span class="b6">C</span>
+        <span class="b7">D</span>
+      </div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -23,7 +72,11 @@ log_box = st.empty()
 
 uploaded = st.file_uploader("Chọn file Excel đầu vào (cột CCCD bắt buộc)", type=["xlsx", "xls", "csv"])
 
-show_browser = st.checkbox("Mở cửa sổ Chrome khi chạy (tắt nếu chạy trên server không có GUI)", value=True)
+default_show_browser = os.getenv("STREAMLIT_SERVER_HEADLESS", "").lower() not in ("true", "1")
+show_browser = st.checkbox(
+    "Mở cửa sổ Chrome khi chạy (tắt nếu chạy trên server không có GUI)",
+    value=default_show_browser,
+)
 show_logs = st.checkbox("Hiển thị log chi tiết", value=False)
 
 col1, col2 = st.columns([1, 1])

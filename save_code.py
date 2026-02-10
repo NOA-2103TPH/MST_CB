@@ -75,7 +75,19 @@ def init_driver(headless=False):
         options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
+    # Support Streamlit Cloud/containers where Chrome is at a custom path
+    chrome_bin = os.getenv("CHROME_BIN")
+    if chrome_bin and os.path.exists(chrome_bin):
+        options.binary_location = chrome_bin
+
+    driver_path = os.getenv("CHROMEDRIVER_PATH")
+    if driver_path and os.path.exists(driver_path):
+        service = Service(driver_path)
+    else:
+        service = Service(ChromeDriverManager().install())
+
+    driver = webdriver.Chrome(service=service, options=options)
     return driver
 
 def lookup_mst(driver, cccd, log_fn=log):
